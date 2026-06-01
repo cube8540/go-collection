@@ -3,6 +3,7 @@ package rbtree
 import (
 	"cmp"
 	"fmt"
+	"math/rand"
 	"testing"
 )
 
@@ -496,6 +497,39 @@ func TestRBRemoveInterleavedOperationsMaintainInvariants(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestRBRandomOperations(t *testing.T) {
+	tree := New[int, int]()
+	expected := map[int]bool{}
+
+	for i := 0; i < 10000; i++ {
+		v := rand.Intn(1000)
+
+		if rand.Intn(2) == 0 {
+			inserted := tree.Insert(v, v)
+			if expected[v] {
+				if inserted != nil {
+					t.Fatalf("중복 삽입인데 nil이 아닙니다: %d", v)
+				}
+			} else {
+				if inserted == nil {
+					t.Fatalf("새 값 삽입인데 nil입니다: %d", v)
+				}
+				expected[v] = true
+			}
+		} else {
+			tree.Remove(v)
+			delete(expected, v)
+		}
+
+		if tree.Size() != len(expected) {
+			t.Fatalf("size 불일치")
+		}
+
+		assertRBTreeInvariants(t, tree)
+		assertInOrderValues(t, tree, sortedKeys(expected))
 	}
 }
 
